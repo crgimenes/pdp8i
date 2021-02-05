@@ -1,3 +1,3 @@
 all:
-	GOARCH=arm GOOS=linux go build -o pdp8go main.go
+	GOARCH=arm GOOS=linux go build -o testleds main.go
 
