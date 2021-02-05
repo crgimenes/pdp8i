@@ -59,34 +59,65 @@ func main() {
 			panic(err)
 		}
 	}
-
-	// set LEDs on
-	var lc [12]*gpiod.Line
-	for k, col := range cols {
-		lc[k], err = c.RequestLine(col, gpiod.AsOutput(0))
-		if err != nil {
-			panic(err)
+	/*
+		// set LEDs on
+		var lc [12]*gpiod.Line
+		for k, col := range cols {
+			lc[k], err = c.RequestLine(col, gpiod.AsOutput(0))
+			if err != nil {
+				panic(err)
+			}
 		}
-	}
-
+	*/
 	// set ROWs 0v (sinks current)
 	var kr [3]*gpiod.Line
 	for k, r := range rows {
-		kr[k], err = c.RequestLine(col, gpiod.AsOutput(0))
+		kr[k], err = c.RequestLine(r, gpiod.AsOutput(0))
 		if err != nil {
 			panic(err)
 		}
 	}
 
 	// wait 3 seconds
-	<-time.After(3 * time.Second)
+	//	<-time.After(1 * time.Second)
 
 	// set LEDs off
-	for _, l := range lc {
-		err = l.SetValue(1)
+	/*
+		for _, l := range lc {
+			err = l.SetValue(1)
+			if err != nil {
+				panic(err)
+			}
+		}
+	*/
+	//////////////////////////////////////////////////
+	var kc [12]*gpiod.Line
+
+	for k, col := range cols {
+		kc[k], err = c.RequestLine(
+			col,
+			gpiod.WithPullUp,
+			gpiod.WithBothEdges,
+			gpiod.WithEventHandler(eventHandler))
 		if err != nil {
 			panic(err)
 		}
+		defer kc[k].Close()
 	}
 
+	<-time.After(5 * time.Second)
+
+}
+
+func eventHandler(evt gpiod.LineEvent) {
+	t := time.Now()
+	edge := "rising"
+	if evt.Type == gpiod.LineEventFallingEdge {
+		edge = "falling"
+	}
+	fmt.Printf("event:%3d %-7s %s (%s)\n",
+		evt.Offset,
+		edge,
+		t.Format(time.RFC3339Nano),
+		evt.Timestamp)
 }
