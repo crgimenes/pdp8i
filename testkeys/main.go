@@ -51,62 +51,73 @@ func main() {
 	}
 	defer c.Close()
 
-	// set LED line on
+	// set LED line off
 	var ll [8]*gpiod.Line
 	for k, l := range ledRow {
-		ll[k], err = c.RequestLine(l, gpiod.AsOutput(1))
+		ll[k], err = c.RequestLine(l, gpiod.AsOutput(0))
 		if err != nil {
 			panic(err)
 		}
 	}
-	/*
-		// set LEDs on
-		var lc [12]*gpiod.Line
-		for k, col := range cols {
-			lc[k], err = c.RequestLine(col, gpiod.AsOutput(0))
-			if err != nil {
-				panic(err)
-			}
-		}
-	*/
+
 	// set ROWs 0v (sinks current)
-	var kr [3]*gpiod.Line
-	for k, r := range rows {
-		kr[k], err = c.RequestLine(r, gpiod.AsOutput(0))
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	// wait 3 seconds
-	//	<-time.After(1 * time.Second)
-
-	// set LEDs off
 	/*
-		for _, l := range lc {
-			err = l.SetValue(1)
+		var kr [3]*gpiod.Line
+		for k, r := range rows {
+			kr[k], err = c.RequestLine(r, gpiod.AsOutput(0))
 			if err != nil {
 				panic(err)
 			}
 		}
 	*/
-	//////////////////////////////////////////////////
-	var kc [12]*gpiod.Line
 
-	for k, col := range cols {
-		kc[k], err = c.RequestLine(
-			col,
-			gpiod.WithPullUp,
-			gpiod.WithBothEdges,
-			gpiod.WithEventHandler(eventHandler))
+	kr, err := c.RequestLine(rows[0], gpiod.AsOutput(0))
+	if err != nil {
+		panic(err)
+	}
+	defer kr.Close()
+	//////////////////////////////////////////////////
+	/*
+		var kc [12]*gpiod.Line
+		for k, col := range cols {
+			kc[k], err = c.RequestLine(
+				col,
+				gpiod.WithPullUp,
+				gpiod.WithBothEdges,
+				gpiod.WithEventHandler(eventHandler))
+			if err != nil {
+				panic(err)
+			}
+			defer kc[k].Close()
+		}
+	*/
+	////////////////////
+	// ser all cols as output except col 0
+
+	// set LEDs on
+	var lc [12]*gpiod.Line
+	for k, col := range cols[1:] {
+		lc[k], err = c.RequestLine(col, gpiod.AsOutput(1))
 		if err != nil {
 			panic(err)
 		}
-		defer kc[k].Close()
 	}
 
-	<-time.After(5 * time.Second)
+	//////////////
+	// set col 0 as input
+	period := 10 * time.Millisecond
+	kc, err := c.RequestLine(
+		cols[0],
+		gpiod.WithPullUp,
+		gpiod.WithBothEdges,
+		gpiod.WithDebounce(period),
+		gpiod.WithEventHandler(eventHandler))
+	if err != nil {
+		panic(err)
+	}
+	defer kc.Close()
 
+	<-time.After(40 * time.Second)
 }
 
 func eventHandler(evt gpiod.LineEvent) {
