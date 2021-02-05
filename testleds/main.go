@@ -51,7 +51,7 @@ func main() {
 	}
 	defer c.Close()
 
-	// set leader line on
+	// set LED line on
 	var ll [8]*gpiod.Line
 	for k, l := range ledRow {
 		ll[k], err = c.RequestLine(l, gpiod.AsOutput(1))

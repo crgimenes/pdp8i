@@ -51,7 +51,7 @@ func main() {
 	}
 	defer c.Close()
 
-	// set leader line on
+	// set LED line on
 	var ll [8]*gpiod.Line
 	for k, l := range ledRow {
 		ll[k], err = c.RequestLine(l, gpiod.AsOutput(1))
@@ -64,6 +64,15 @@ func main() {
 	var lc [12]*gpiod.Line
 	for k, col := range cols {
 		lc[k], err = c.RequestLine(col, gpiod.AsOutput(0))
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	// set ROWs 0v (sinks current)
+	var kr [3]*gpiod.Line
+	for k, r := range rows {
+		kr[k], err = c.RequestLine(col, gpiod.AsOutput(0))
 		if err != nil {
 			panic(err)
 		}
