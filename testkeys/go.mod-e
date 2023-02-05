@@ -1,5 +1,7 @@
 module pdp8go
 
-go 1.15
+go 1.20
 
-require github.com/warthog618/gpiod v0.6.0
+require github.com/warthog618/gpiod v0.8.1
+
+require golang.org/x/sys v0.4.0 // indirect
